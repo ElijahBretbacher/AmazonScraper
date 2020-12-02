@@ -17,10 +17,10 @@ url = f'https://www.amazon.de/s?k={searchterm}'
     :return returns a parsed html text
 """
 def getSoup(url):
-    response = session.get(url)
-    response.html.render(sleep=1)
-    soup = BeautifulSoup(response.html.html, 'html.parser')
-    return soup
+        response = session.get(url)
+        response.html.render(sleep=1)
+        soup = BeautifulSoup(response.html.html, 'html.parser')
+        return soup
 
 
 """ :parameter filePath: the path of the file to be cleared
@@ -67,7 +67,7 @@ def getProducts(soup):
 
         # dictionary storing every relevant variable
         productObject = {
-            "short_title": short_title,
+            "short_title": title,
             "price": price,
             "oldPrice": oldPrice,
             "link": link
@@ -78,12 +78,12 @@ def getProducts(soup):
         # if an item is on discount, add it to the text file
         if price != oldPrice:
             discount = open("discounts.txt", "a")
-            discount.write("Title: " + short_title + "\nNew Price: " + price + "\nOld Price: " + oldPrice + "\nURL: " + link + "\n\n")
+            discount.write("Title: " + title + "\nNew Price: " + price + "\nOld Price: " + oldPrice + "\nURL: " + link + "\n\n")
             discount.close()
 
         # add every item into a textfile regardless
         file = open("products.txt", "a")
-        file.write(short_title + "\n" + price + " " + oldPrice + "\n" + link + "\n\n")
+        file.write(title + "\n" + price + " " + oldPrice + "\n" + link + "\n\n")
         file.close()
 
 
@@ -92,16 +92,16 @@ def getProducts(soup):
      opens the next page to iterate through
 """
 def getNextPage(soup):
-    # this will return the next page URL
-    pages = soup.find('ul', {'class': 'a-pagination'})
+        # this will return the next page URL
+        pages = soup.find('ul', {'class': 'a-pagination'})
 
-    # if there is a next page available, get the link and return it
-    if not pages.find('li', {'class': 'a-disabled a-last'}):
-        url = 'https://www.amazon.de' + str(pages.find('li', {'class': 'a-last'}).find('a')['href'])
-        print(str(url))
-        return url
-    else:
-        return
+        # if there is a next page available, get the link and return it
+        if not pages.find('li', {'class': 'a-disabled a-last'}):
+            url = 'https://www.amazon.de' + str(pages.find('li', {'class': 'a-last'}).find('a')['href'])
+            print(str(url))
+            return url
+        else:
+            return
 
 
 # clear files before starting
@@ -109,14 +109,20 @@ clearFile("discounts.txt")
 clearFile("products.txt")
 
 # loop runs as long as the program has URLs to iterate through
+counter = 0
+startingURL = url
 while True:
-    # get the current page, extract data, open new page, repeat.
-    try:
-        data = getSoup(url)
-        getProducts(data)
-        url = getNextPage(data)
-        if not url:
-            break
-    except:
-        break
-
+    counter = 0
+    url = startingURL
+    while True:
+        # get the current page, extract data, open new page, repeat.
+        try:
+            data = getSoup(url)
+            getProducts(data)
+            url = getNextPage(data)
+            counter = 0
+        except:
+            counter+=1
+            print("Error Num " + str(counter))
+            if counter==5:
+                break
